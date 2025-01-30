@@ -72,24 +72,27 @@ export default {
       if (data['assigned'] == ApplicationStates.APPROVED) return { result: true, key: role }
       if (data['assigned'] == ApplicationStates.REJECTED) return { result: false, rejected: true }
       return { result: false }
-    } else
-      if (
-        checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.PENDING)
-      ) {
-        return { result: false };
-      } else if (
-        checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.REJECTED)
-      ) {
-        return { result: false };
-      } else if (
-        checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.APPROVED)
-      ) {
-        if (checkStatus(data[role], ApplicationStates.PENDING)) {
-          return { result: true, key: role };
-        } else {
-          return { result: false, doubleError: true };
-        }
+    } else if (
+      role === this.approveProcedure[1] // not check procedure on review 2
+    ) {
+      return { result: true, key: role }
+    } else if (
+      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.PENDING)
+    ) {
+      return { result: false };
+    } else if (
+      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.REJECTED)
+    ) {
+      return { result: false };
+    } else if (
+      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.APPROVED)
+    ) {
+      if (checkStatus(data[role], ApplicationStates.PENDING)) {
+        return { result: true, key: role };
+      } else {
+        return { result: false, doubleError: true };
       }
+    }
     return { result: false };
   },
   autoEmail: async function (role: string, process: string, application: any) {
