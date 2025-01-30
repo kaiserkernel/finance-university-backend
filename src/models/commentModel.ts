@@ -26,6 +26,9 @@ const commentShema = new Schema({
   grant_dir: {
     type: Review,
   },
+  finance: {
+    type: Review
+  }
   // attached: [
   //   {
   //     chaining: {
