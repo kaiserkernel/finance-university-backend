@@ -66,7 +66,13 @@ app.use("/api/auth", authRouter);
 app.use("/api/seed", seedRouter);
 
 app.use("/api/pending-user", authVerify, pendingUserRouter);
-app.use("/api/announcement", authVerify, announcementRouter);
+// app.use("/api/announcement", authVerify, announcementRouter);
+app.use("/api/announcement", (req, res, next) => {
+	if (req.method === 'GET' && req.path === "/") {
+		return next();
+	}
+	authVerify(req, res, next);
+}, announcementRouter);
 app.use("/api/user", authVerify, profileRouter);
 app.use("/api/grant-application", authVerify, [
 	applicationRouter,
