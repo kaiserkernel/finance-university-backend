@@ -42,8 +42,7 @@ const storageOfAdditionalDoc = multer.diskStorage({
   },
   filename: async function (req, file, cb) {
     try {
-      const user = await User.findOne({email: req.params.email})
-      cb(null, user?.enrollment + '-' + Date.now() + '.' + file.originalname.split('.').pop())
+      cb(null, "moreinfo" + '-' + Date.now() + '.' + file.originalname.split('.').pop())
     } catch (error: any) {
       throw new Error(error.message)
     }
