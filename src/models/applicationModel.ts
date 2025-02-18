@@ -19,6 +19,18 @@ const ApplicationSchema = new Schema({
     type: String,
     required: true,
   },
+  applicationOne: {
+    type: String,
+    validate: {
+      validator: function (this:any, value: string) {
+        // Make application_1 required if milestone is 1
+        if (this.milestone === 1 && !value) {
+          return false
+        }
+        return true
+      }
+    }
+  },
   application: {
     type: String,
     required: true,

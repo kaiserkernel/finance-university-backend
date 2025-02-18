@@ -58,11 +58,20 @@ router.get("/:email", (req: any, res: Response) => {
 
 router.post(
   "/:email",
-  uploadApplication.single("application"),
+  uploadApplication.fields([
+    { name: "application", maxCount: 1 },
+    { name: "applicationOne", maxCount: 1 }
+  ]),
   (req: any, res: Response) => {
 
     const { announcement, budget, milestone, currencyType } = JSON.parse(req.body.data)
 
+    // Extract file paths
+    const applicationPath = req.files["application"][0].filename;
+    const applicationOnePath = req.files["applicationOne"]
+      ? req.files["applicationOne"][0].filename
+      : null; // Optional file
+      
     confirmUserByEmail(req.params.email)
       .then((response) => {
         if (response.confirmed) {
@@ -73,11 +82,12 @@ router.post(
             firstName: user?.firstName,
             lastName: user?.lastName,
             college: user?.college,
-            application: req.file.filename,
+            application: applicationPath,
+            applicationOne: applicationOnePath,
             announcement,
             budget,
             milestone,
-            currencyType
+            currencyType,
           };
           const newApplication = new Application(data);
 
