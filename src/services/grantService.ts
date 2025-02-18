@@ -77,6 +77,10 @@ export default {
     ) {
       return { result: true, key: role }
     } else if (
+      role === this.approveProcedure[2] && data['milestone'] !== 1  // not check procedure on col dean of milestone 2, 3
+    ) {
+      return { result: true, key: role }
+    } else if (
       checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.PENDING)
     ) {
       return { result: false };
