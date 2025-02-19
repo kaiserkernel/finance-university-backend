@@ -39,12 +39,18 @@ export default {
         throw new Error("Application not found");
       }
 
-      if (application[role] == ApplicationStates.APPROVED)
+      let status = application[role];
+      if (role.includes('reviewer')) { // check if reviewer_1 or reviewer_2
+        status = application[role]['status'];
+      }
+
+      if (status === ApplicationStates.APPROVED)
         throw new Error("You have already approved this application");
-      if (application[role] == ApplicationStates.REJECTED)
+      if (status === ApplicationStates.REJECTED)
         throw new Error("You have already rejected this application");
       if (application[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]] == ApplicationStates.REJECTED)
         throw new Error("This application is rejected already.");
+
 
       const confirmData = this.checkProcedure(role, application);
 
