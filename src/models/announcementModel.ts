@@ -4,6 +4,7 @@ const announcementShema = new Schema({
   title: {
     type: String,
     required: true,
+    unique: true
   },
   from: {
     type: String,

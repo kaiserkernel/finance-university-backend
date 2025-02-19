@@ -49,7 +49,13 @@ router.post("/", upload.single('image'), async (req: any, res: Response) => {
   }
 
   const data = JSON.parse(req.body.data);
-  console.log('announcement: ', data)
+  const {title} = data;
+  const existingAnnouncement = await Announcement.find({title});
+  if (existingAnnouncement) {
+    res.status(400).json({msg: ["Already existing announcement with same title"]});
+    return;
+  }
+  
   const newAnnouncement = new Announcement(data);
   if (req.file) newAnnouncement.imageUrl = 'images/' + req.file.filename;
 
