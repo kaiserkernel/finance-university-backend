@@ -9,7 +9,7 @@ import { io } from "@/index";
 const router = Router();
 
 router.post("/approve/:id", async (req: any, res: Response) => {
-  const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email)
+  const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email);
   GrantService.handleRequest(req.params.id, role, true)
     .then((response) => {
       if (!isEmpty(response)) {
