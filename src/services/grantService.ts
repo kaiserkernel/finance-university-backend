@@ -51,13 +51,13 @@ export default {
       if (application[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]] == ApplicationStates.REJECTED)
         throw new Error("This application is rejected already.");
 
-
       const confirmData = this.checkProcedure(role, application);
 
       if (!confirmData.result) {
         if (confirmData.doubleError)
           throw new Error("Your action is already taken.");
-        if (confirmData.rejected) throw new Error("This application has been rejected.");
+        if (confirmData.rejected)
+          throw new Error("This application has been rejected.");
 
         throw new Error("Your previous step was not performed.");
       }

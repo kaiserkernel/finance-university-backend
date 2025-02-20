@@ -25,7 +25,6 @@ router.post("/approve/:id", async (req: any, res: Response) => {
 });
 
 router.post("/assign/:id", (req: any, res: Response) => {
-  console.log('assign: ', req.body)
   Application.findByIdAndUpdate(req.params.id, { $set: { assigned: req.body.assign } })
     .then((response) => {
       Application.findByIdAndUpdate(req.params.id, { $set: { 'reviewer_1.user': req.body.reviewers[0], 'reviewer_2.user': req.body.reviewers[1] } }, { new: true })
@@ -43,8 +42,9 @@ router.post("/assign/:id", (req: any, res: Response) => {
     });
 });
 
-router.post("/reject/:id", (req: any, res: Response) => {
-  GrantService.handleRequest(req.params.id, req.tokenUser.role, false)
+router.post("/reject/:id", async (req: any, res: Response) => {
+  const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email);
+  GrantService.handleRequest(req.params.id, role, false)
     .then((response) => {
       if (!isEmpty(response)) {
         io.emit('update_request')
