@@ -30,7 +30,7 @@ export default {
     { grant_dir: "Research and Publication Directorate" },
     { finance: "Finance Director" },
   ],
-  handleRequest: async function (id: string, role: string | null, flag: boolean) {
+  handleRequest: async function (id: string, role: string | null, reqStatus: string) {
     if (role == null) throw new Error("Role validation Error")
     if (role === "user") throw new Error("You don't have permission");
     try {
@@ -44,14 +44,16 @@ export default {
         status = application[role]['status'];
       }
 
-      if (status === ApplicationStates.APPROVED)
+      if (status === ApplicationStates.REVIEWED && reqStatus === ApplicationStates.REVIEWED)
+        throw new Error("You have already reviewed this application")
+      if (status === ApplicationStates.APPROVED && reqStatus === ApplicationStates.APPROVED)
         throw new Error("You have already approved this application");
       if (status === ApplicationStates.REJECTED)
         throw new Error("You have already rejected this application");
       if (application[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]] == ApplicationStates.REJECTED)
         throw new Error("This application is rejected already.");
 
-      const confirmData = this.checkProcedure(role, application);
+      const confirmData = this.checkProcedure(role, application, reqStatus);
 
       if (!confirmData.result) {
         if (confirmData.doubleError)
@@ -64,7 +66,7 @@ export default {
       const statusKey = confirmData.key.includes('reviewer') ? `${confirmData.key}.status` : confirmData.key
       // console.log('status key: ', statusKey)
       // application[statusKey] = flag ? ApplicationStates.APPROVED : ApplicationStates.REJECTED;
-      setNestedProperty(application, statusKey, flag ? ApplicationStates.APPROVED : ApplicationStates.REJECTED)
+      setNestedProperty(application, statusKey, reqStatus)
       await application.save();
       // flag && this.autoEmail(role, confirmData.key, application);
       // !flag && sendEmail(denyMail(application.email));
@@ -73,35 +75,67 @@ export default {
       throw error;
     }
   },
-  checkProcedure(role: string, data: any): Record<string, any> {
+  checkProcedure(role: string, data: any, reqStatus: string): Record<string, any> {
+    const currentRoleIndex = this.approveProcedure.indexOf(role);
+    const previousRole = this.approveProcedure[currentRoleIndex - 1];
+
     if (role === this.approveProcedure[0]) {
       if (data['assigned'] == ApplicationStates.APPROVED) return { result: true, key: role }
       if (data['assigned'] == ApplicationStates.REJECTED) return { result: false, rejected: true }
       return { result: false }
-    } else if (
-      role === this.approveProcedure[1] // not check procedure on review 2
-    ) {
+    }
+
+    // Handling for the second role (review 2) - not check procedure on review 2
+    if ( role === this.approveProcedure[1]) {
       return { result: true, key: role }
-    } else if (
-      role === this.approveProcedure[2] && data['milestone'] !== 1  // not check procedure on col dean of milestone 2, 3
-    ) {
-      return { result: true, key: role }
-    } else if (
-      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.PENDING)
-    ) {
+    }
+    
+    // col dean restriction
+    if ( role === this.approveProcedure[2] ) {
+      // not check procedure on col dean of milestone 2, 3 and not review request
+      const isMilestoneCheck = reqStatus !== ApplicationStates.REVIEWED && data['milestone'] !== 1;
+      // not check procedure on col dean of user reviewed and not review request
+      const isReviewedCheck = reqStatus === ApplicationStates.REVIEWED && data['reviewed'] === ApplicationStates.REVIEWED;
+      
+      if (isMilestoneCheck || isReviewedCheck) {
+        return { result: true, key: role }
+      }
+    }
+    
+    // finance checking procedure
+    if (role === this.approveProcedure[5] ) {
+      if (checkStatus(data[previousRole], ApplicationStates.REVIEWED)) {
+        // previous role's status is reivewed - true
+        return { result: true, key: role }
+      }
+      // not upper case - false
+      return { result: false }
+    }
+    
+    // Check for pending, rejected, or approved statuses of the previous role
+    if ( checkStatus(data[previousRole], ApplicationStates.PENDING) || checkStatus(data[previousRole], ApplicationStates.REJECTED)) {
       return { result: false };
-    } else if (
-      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.REJECTED)
-    ) {
-      return { result: false };
-    } else if (
-      checkStatus(data[this.approveProcedure[this.approveProcedure.indexOf(role) - 1]], ApplicationStates.APPROVED)
-    ) {
+    }
+    
+    if (checkStatus(data[previousRole], ApplicationStates.APPROVED)) {
+      if (reqStatus === ApplicationStates.REVIEWED) {
+        return { result: false }
+      }
       if (checkStatus(data[role], ApplicationStates.PENDING)) {
         return { result: true, key: role };
-      } else {
-        return { result: false, doubleError: true };
       }
+      
+      return { result: false, doubleError: true };
+    } 
+    
+    if ( checkStatus(data[previousRole], ApplicationStates.REVIEWED) ) {
+      if (checkStatus(data[role], ApplicationStates.APPROVED) && (checkStatus(reqStatus, ApplicationStates.REJECTED) || checkStatus(reqStatus, ApplicationStates.REVIEWED))) {
+        return { result: true, key: role }
+      }
+      if (checkStatus(data[role], ApplicationStates.REJECTED) || checkStatus(data[role], ApplicationStates.REVIEWED)){
+        return { result: false, doubleError: true }
+      }
+      return { result: false }
     }
     return { result: false };
   },

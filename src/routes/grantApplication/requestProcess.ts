@@ -6,11 +6,13 @@ import { isEmpty } from "@/utils/isEmpty";
 import { uploadAddDoc, uploadReview } from "@/middleware/multer";
 import { io } from "@/index";
 
+import { ApplicationStates } from '@/constant/applicationState'
+
 const router = Router();
 
 router.post("/approve/:id", async (req: any, res: Response) => {
   const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email);
-  GrantService.handleRequest(req.params.id, role, true)
+  GrantService.handleRequest(req.params.id, role, ApplicationStates.APPROVED)
     .then((response) => {
       if (!isEmpty(response)) {
         io.emit('update_request')
@@ -44,7 +46,7 @@ router.post("/assign/:id", (req: any, res: Response) => {
 
 router.post("/reject/:id", async (req: any, res: Response) => {
   const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email);
-  GrantService.handleRequest(req.params.id, role, false)
+  GrantService.handleRequest(req.params.id, role, ApplicationStates.REJECTED)
     .then((response) => {
       if (!isEmpty(response)) {
         io.emit('update_request')
@@ -57,6 +59,22 @@ router.post("/reject/:id", async (req: any, res: Response) => {
       res.status(500).json({ msg: [error.message] });
     });
 });
+
+router.post("/review/:id", async (req: any, res: Response) => {
+  const role = await applicationPropertyGetter(req.params.id, req.tokenUser.role, req.tokenUser.email);
+  GrantService.handleRequest(req.params.id, role, ApplicationStates.REVIEWED)
+    .then((response) => {
+      if (!isEmpty(response)) {
+        io.emit('update_request')
+        res.status(200).send(response);
+        return;
+      }
+      throw new Error("Could not find the application.");
+    })
+    .catch((error) => {
+      res.status(500).json({ msg: [error.message] });
+    });
+})
 
 // Set comment router
 router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res: Response) => {

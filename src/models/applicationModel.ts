@@ -76,17 +76,17 @@ const ApplicationSchema = new Schema({
   },
   col_dean: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "reviewd"],
     default: "pending",
   },
   grant_dep: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "reviewed"],
     default: "pending",
   },
   grant_dir: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "reviewed"],
     default: "pending",
   },
   finance: {
@@ -114,7 +114,32 @@ const ApplicationSchema = new Schema({
   additionalDoc: {
     type: [String],
     default: []
+  },
+  invoiceDoc: {
+    type: String
+  },
+  reviewed: {
+    type: String,
+    enum: ["pending", "approved", "reviewed"],
+    default: "pending"
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
+});
+
+// Middleware to update the reviewed field
+ApplicationSchema.pre('save', function (next) {
+  if (this.grant_dir === 'approved') {
+    this.reviewed = 'approved';
+  }
+
+  if (this.invoiceDoc) {
+    this.reviewed = 'reviewed';
+  }
+  
+  next();
 });
 
 export const Application = model("Application", ApplicationSchema);
