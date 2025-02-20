@@ -149,7 +149,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
       res.json({ token: newToken });
     });
   } catch (error: any) {
-    res.status(500).send(error.message);
+    res.status(500).send({msg: [error.message]});
   }
 });
 
@@ -171,7 +171,7 @@ router.post("/logout", async (req: Request, res: Response) => {
     await user.save();
     res.sendStatus(204); // No Content
   } catch (error: any) {
-    res.status(500).send(error.message);
+    res.status(500).send({msg: [error.message]});
   }
 });
 

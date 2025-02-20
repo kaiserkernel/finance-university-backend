@@ -3,6 +3,7 @@ import { uploadApplication } from "@/middleware/multer";
 import { Application } from "@/models/applicationModel";
 import { confirmUserByEmail } from "@/utils/confirmUserByEmail";
 import { isEmpty } from "@/utils/isEmpty";
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -62,47 +63,92 @@ router.post(
     { name: "application", maxCount: 1 },
     { name: "applicationOne", maxCount: 1 }
   ]),
-  (req: any, res: Response) => {
+  async (req: any, res: Response) => {
+    try {
+      const { announcement, budget, milestone, currencyType } = JSON.parse(req.body.data);
 
-    const { announcement, budget, milestone, currencyType } = JSON.parse(req.body.data)
+      // Extract file paths with existence checks
+      const applicationPath = req.files["application"] ? req.files["application"][0].filename : null;
+      const applicationOnePath = req.files["applicationOne"] ? req.files["applicationOne"][0].filename : null;
 
-    // Extract file paths
-    const applicationPath = req.files["application"][0].filename;
-    const applicationOnePath = req.files["applicationOne"]
-      ? req.files["applicationOne"][0].filename
-      : null; // Optional file
-      
-    confirmUserByEmail(req.params.email)
-      .then((response) => {
-        if (response.confirmed) {
-          const user = response.user;
-          const data = {
-            email: user?.email,
-            enrollment: user?.enrollment,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            college: user?.college,
-            application: applicationPath,
-            applicationOne: applicationOnePath,
-            announcement,
-            budget,
-            milestone,
-            currencyType,
-          };
-          const newApplication = new Application(data);
+      // Confirm user by email
+      const response = await confirmUserByEmail(req.params.email);
+      if (!response.confirmed) {
+        console.log(1);
+        res.status(403).json({ msg: "User not confirmed" });
+        return;
+      }
 
-          newApplication
-            .save()
-            .then(() => {
-              res.status(200).json({ msg: "Application saved" })
-            })
-            .catch((error) => res.status(500).json({ msg: [error.message] }));
-        }
-      })
-      .catch((error) => {
-        res.status(404).json({ msg: [error.message] });
+      const user = response.user;
+      const prevMilestone = milestone - 1;
+
+      // Check for existing application
+      const existingApplication = await Application.findOne({
+        email: user?.email,
+        announcement,
+        milestone: prevMilestone,
+        finance: "approved"
       });
+
+      if (!existingApplication) {
+        res.status(400).json({ msg: ["Previous application are not approved"] });
+        return;
+      }
+
+      // Prepare new application data
+      const data = {
+        email: user?.email,
+        enrollment: user?.enrollment,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        college: user?.college,
+        application: applicationPath,
+        applicationOne: applicationOnePath,
+        announcement,
+        budget,
+        milestone,
+        currencyType,
+      };
+
+      // Save new application
+      const newApplication = new Application(data);
+      await newApplication.save();
+      res.status(200).json({ msg: "Application saved" });
+    } catch (error) {
+      console.log(error, 'create application error');
+      res.status(400).json({msg: ["Crate application occur error"]});
+    }
   }
 );
+
+router.get("/invoice/:announcementId", (req: any, res: Response) => {
+  const user = req.tokenUser;
+  const announcementId = new mongoose.Types.ObjectId(req.params.announcementId);
+
+  Application.aggregate([
+    {
+      $match: {
+        $and: [
+          { announcement: announcementId },
+          { email: user.email }
+        ]
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        createdAt: 1,
+        budget: 1,
+        milestone: 1
+      }
+    }
+  ])
+    .then(results => {
+      return res.status(200).json({success: true, data: results})
+    })
+    .catch(error => {
+      res.status(404).json({success: false, msg: [error.message]});
+    })
+})
 
 export { router as applicationRouter };

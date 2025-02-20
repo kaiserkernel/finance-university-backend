@@ -37,7 +37,6 @@ console.log('auto email: ', receiverEmail)
   return new Promise((resolve, reject) => {
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.log("Error MESSAGE", error.message);
         reject({ success: false, message: error.message });
       } else {
         console.log("Email sent ", info);

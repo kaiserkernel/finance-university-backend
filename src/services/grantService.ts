@@ -128,11 +128,11 @@ export default {
       return { result: false, doubleError: true };
     } 
     
-    if ( checkStatus(data[previousRole], ApplicationStates.REVIEWED) ) {
-      if (checkStatus(data[role], ApplicationStates.APPROVED) && (checkStatus(reqStatus, ApplicationStates.REJECTED) || checkStatus(reqStatus, ApplicationStates.REVIEWED))) {
+    if (checkStatus(data[previousRole], ApplicationStates.REVIEWED)) {
+      if (checkStatus(data[role], ApplicationStates.APPROVED) && (checkStatus(reqStatus, ApplicationStates.REVIEWED))) {
         return { result: true, key: role }
       }
-      if (checkStatus(data[role], ApplicationStates.REJECTED) || checkStatus(data[role], ApplicationStates.REVIEWED)){
+      if (checkStatus(data[role], ApplicationStates.REVIEWED)){
         return { result: false, doubleError: true }
       }
       return { result: false }

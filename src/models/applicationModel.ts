@@ -76,7 +76,7 @@ const ApplicationSchema = new Schema({
   },
   col_dean: {
     type: String,
-    enum: ["pending", "approved", "rejected", "reviewd"],
+    enum: ["pending", "approved", "rejected", "reviewed"],
     default: "pending",
   },
   grant_dep: {
@@ -115,7 +115,7 @@ const ApplicationSchema = new Schema({
     type: [String],
     default: []
   },
-  invoiceDoc: {
+  invoice: {
     type: String
   },
   reviewed: {
@@ -134,11 +134,6 @@ ApplicationSchema.pre('save', function (next) {
   if (this.grant_dir === 'approved') {
     this.reviewed = 'approved';
   }
-
-  if (this.invoiceDoc) {
-    this.reviewed = 'reviewed';
-  }
-  
   next();
 });
 

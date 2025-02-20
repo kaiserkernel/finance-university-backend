@@ -15,7 +15,7 @@ router.post("/", async (req: any, res: Response) => {
 
         // validate requset body
         if (!axis) {
-            res.status(400).json({success: false, message: "Please send requirement"});
+            res.status(400).json({success: false, msg: ["Please send requirement"]});
             return;
         }
 
@@ -84,14 +84,14 @@ router.post("/", async (req: any, res: Response) => {
                 ])
             }
         } else {
-            res.status(400).json({success: false, message: "You are not allowed"});
+            res.status(400).json({success: false, msg: ["You are not allowed"]});
         }
         
         res.status(200).json({success: true, data: result});
         return;
     } catch (error) {
         console.log(error, 'fetch chart data error');
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, msg: ["Fetch chart data occur error"]});
     }
 })
 
@@ -100,20 +100,20 @@ router.post("/college/:college", async(req: any, res: Response) => {
     collegeList.forEach(college => collegeListMap.set(college.name, college.value));
 
     if (!req.params.college) {
-        res.status(400).json({success: false, message: "Please select college"});
+        res.status(400).json({success: false, msg: ["Please select college"]});
         return;
     }
 
     const selectedCollege = collegeListMap.get(req.params.college);
     if (!selectedCollege) {
-        res.status(400).json({success: false, message: "Please select correct college"});
+        res.status(400).json({success: false, msg: ["Please select correct college"]});
         return;
     }
     
     try {
         const { role } = req.tokenUser;
         if (!allowedRoles.includes(role)) {
-            res.status(400).json({success: false, message: "You are not allowed"})
+            res.status(400).json({success: false, msg: ["You are not allowed"]})
         }
 
         const result = await Application.aggregate([
@@ -153,20 +153,20 @@ router.post("/college/:college", async(req: any, res: Response) => {
         return;
     } catch (error) {
         console.log(error, 'fetch chart data for college');
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, msg: ["Fetch chart data for college occur error"] });
     }
 })
 
 router.post("/announcement/:announcement", async(req: any, res: Response) => {
     if (!req.params.announcement) {
-        res.status(400).json({success: false, message: "Please select college"});
+        res.status(400).json({success: false, msg: ["Please select college"]});
         return;
     }
     
     try {
         const { role } = req.tokenUser;
         if (!allowedRoles.includes(role)) {
-            res.status(400).json({success: false, message: "You are not allowed"})
+            res.status(400).json({success: false, msg: ["You are not allowed"]})
             return;
         }
 
@@ -217,7 +217,7 @@ router.post("/announcement/:announcement", async(req: any, res: Response) => {
         return;
     } catch (error) {
         console.log(error, 'fetch chart data for college');
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, msg: ["Fetch chart data for announcement occur error"] });
     }
 })
 

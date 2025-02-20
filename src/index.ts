@@ -61,6 +61,10 @@ app.use(
 	"/additional_doc",
 	express.static(path.resolve(__dirname, "..", "public", "additional_doc"))
 );
+app.use(
+	"/invoice",
+	express.static(path.resolve(__dirname, "..", "public", "invoice"))
+);
 
 // router
 app.use("/api/auth", authRouter);
@@ -69,7 +73,7 @@ app.use("/api/seed", seedRouter);
 app.use("/api/pending-user", authVerify, pendingUserRouter);
 // app.use("/api/announcement", authVerify, announcementRouter);
 app.use("/api/announcement", (req, res, next) => {
-	if (req.method === 'GET' && req.path === "/") {
+	if (req.method === 'POST' && req.path === "/all") {
 		return next();
 	}
 	authVerify(req, res, next);

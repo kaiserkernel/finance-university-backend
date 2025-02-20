@@ -3,7 +3,7 @@ import { Application } from "@/models/applicationModel";
 import GrantService from "@/services/grantService";
 import { Comment } from "@/models/commentModel";
 import { isEmpty } from "@/utils/isEmpty";
-import { uploadAddDoc, uploadReview } from "@/middleware/multer";
+import { uploadAddDoc, uploadInvoice, uploadReview } from "@/middleware/multer";
 import { io } from "@/index";
 
 import { ApplicationStates } from '@/constant/applicationState'
@@ -169,6 +169,7 @@ router.put("/more-info/:id", (req: any, res: Response) => {
       res.status(500).json({ msg: [error.message] });
     });
 })
+
 router.post("/add-doc/:id", uploadAddDoc.single('document'), (req: any, res: Response) => {
   Application.findByIdAndUpdate(req.params.id, { $set: { askMoreInfo: false }, $push: { additionalDoc: req.file.filename } })
     .then((response) => {
@@ -182,6 +183,26 @@ router.post("/add-doc/:id", uploadAddDoc.single('document'), (req: any, res: Res
     .catch((error) => {
       res.status(500).json({ msg: [error.message] });
     });
+})
+
+router.post("/invoice/:id", uploadInvoice.single('document'), (req: any, res: Response) => {
+  Application.findByIdAndUpdate(req.params.id, { 
+    $set: { 
+      invoice: req.file.filename,
+      reviewed: "reviewed"
+    } 
+  })
+    .then((response) => {
+      if (!isEmpty(response)) {
+        io.emit('update_request');
+        res.status(200).send(response);
+        return;
+      }
+      throw new Error("Couldn't find such application");
+    })
+    .catch((error) => {
+      res.status(500).json({ msg: [error.message] });
+    })
 })
 
 const applicationPropertyGetter = async (id: string, role: string, email: string) => {

@@ -6,17 +6,60 @@ import { isEmpty } from '@/utils/isEmpty';
 
 const router = Router();
 
-router.get("/", (req: any, res: Response) => {
-
-  Announcement.find().then((announcements) => {
-    if (isEmpty(announcements)) {
-      res.status(200).json([]);
+router.post("/all", async (req: any, res: Response) => {
+  const {userEmail} = req.body;
+  try {
+    if (userEmail) {
+      const result = await Announcement.aggregate([
+        {
+          $lookup: {
+            from: "applications",
+            localField: "_id",
+            foreignField: "announcement",
+            as: "applicationData"
+          }
+        },
+        {
+          $addFields: {
+            invoice: {
+                  $gt: [
+                    {
+                      $size: 
+                      {
+                        $filter: {
+                          input: "$applicationData",
+                          as: "appData",
+                          cond: {
+                            $and: [
+                              { $eq: ["$$appData.email", userEmail] },
+                              { $eq: ["$$appData.reviewed", "approved"] }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    0
+                  ]
+            }
+          }
+        },
+        {
+          $project: {
+            applicationData: 0
+          }
+        }
+      ]);
+      res.status(200).json(result);
+      return;
     } else {
-      res.status(200).json(announcements);
+      const result = await Announcement.find();
+      res.status(200).json(result);
+      return;
     }
-  }).catch((error) => {
-    res.status(500).json({ msg: [error.message] });
-  });
+  } catch (error) {
+    console.log(error, "fetch all announcement error");
+    res.status(400).json({msg: ["Fetch announcement occur error"]});
+  }
 });
 
 router.get("/:id", (req: any, res: Response) => {

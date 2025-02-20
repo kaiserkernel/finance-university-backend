@@ -49,6 +49,20 @@ const storageOfAdditionalDoc = multer.diskStorage({
   }
 })
 
+const storageOfInvoic = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/invoice/')
+  },
+  filename: function (req: any, file, cb) {
+    try {
+      const user = req?.tokenUser;
+      cb(null, "invoice" + '-' + user?.email + "-" + Date.now() + '.' + file.originalname.split('.').pop())
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
+})
+
 export const upload = multer({
   storage: storageOfImage
 })
@@ -63,4 +77,8 @@ export const uploadReview = multer({
 
 export const uploadAddDoc = multer({
   storage: storageOfAdditionalDoc
+})
+
+export const uploadInvoice = multer({
+  storage: storageOfInvoic
 })
