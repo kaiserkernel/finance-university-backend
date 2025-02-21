@@ -131,7 +131,7 @@ const ApplicationSchema = new Schema({
 
 // Middleware to update the reviewed field
 ApplicationSchema.pre('save', function (next) {
-  if (this.grant_dir === 'approved') {
+  if (this.grant_dir === 'approved' && this.reviewed === 'pending') {
     this.reviewed = 'approved';
   }
   next();

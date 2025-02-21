@@ -1,4 +1,4 @@
-import { application, Response, Router } from "express";
+import { Response, Router } from "express";
 import { uploadApplication } from "@/middleware/multer";
 import { Application } from "@/models/applicationModel";
 import { confirmUserByEmail } from "@/utils/confirmUserByEmail";
@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
-router.get("/", (req: any, res: Response) => {
+router.get("/", (_req: any, res: Response) => {
   Application.find()
     .then((application) => {
       if (isEmpty(application)) {
@@ -39,9 +39,6 @@ router.get("/:email", (req: any, res: Response) => {
         .populate("reviewer_1.user", '_id firstName lastName email role')
         .populate("reviewer_2.user", '_id firstName lastName email role')
         .then((application) => {
-          // if (isEmpty(application)) {
-          //   res.status(404).json({ msg: ["No application"] });
-          // } else {
           const data = application.filter((applicationData: any) => {
             return req.tokenUser.email == applicationData.reviewer_1.user?.email || req.tokenUser.email == applicationData.reviewer_2.user?.email || req.tokenUser.role !== 'reviewer'
           })
@@ -90,7 +87,7 @@ router.post(
         finance: "approved"
       });
 
-      if (!existingApplication) {
+      if (!existingApplication && milestone !== 1) {
         res.status(400).json({ msg: ["Previous application are not approved"] });
         return;
       }
@@ -130,7 +127,8 @@ router.get("/invoice/:announcementId", (req: any, res: Response) => {
       $match: {
         $and: [
           { announcement: announcementId },
-          { email: user.email }
+          { email: user.email },
+          { reviewed: 'approved' }
         ]
       }
     },
