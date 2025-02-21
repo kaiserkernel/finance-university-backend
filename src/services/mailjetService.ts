@@ -1,7 +1,5 @@
-const dotenv = require("dotenv");
-const mailjet = require("node-mailjet");
-const fs = require("fs");
-const path = require("path");
+import dotenv from "dotenv";
+import mailjet from "node-mailjet";
 
 dotenv.config();
 
@@ -22,28 +20,32 @@ interface EmailMessage {
     Subject: string;
     TextPart: string;
     HTMLPart: string;
-    Attachments?: Array<{
-      ContentType: string;
-      Filename: string;
-      Base64Content: string;
-    }>;
 }
 
 async function sendEmail(
   toEmail: string,
   toName: string,
-  subject: string,
-  textContent: string,
-  htmlContent: string,
-  attachment?: string
+  reqStatus: string,
+  milestone: number,
+  announcementTitle: string,
+  adminRoleInfo: string
 ) {
   try {
     let request;
 
+    const subject = "Grant system announcement";
+    const textContent = "Your application is " + reqStatus;
+    const htmlContent = `
+      <p>Dear ${toName}</p>
+      <p>Announcement Title: ${announcementTitle}</p>
+      <p>The application that you made as milestone ${milestone} was ${reqStatus}</p>
+      <p>${adminRoleInfo}</p>
+    `
+
     const message: EmailMessage = {
         From: {
-            Email: "secretary@edu.umch.de",
-            Name: "Ticket SYSTEM"
+            Email: "kaiserkernel84@gmail.com",
+            Name: "Grant SYSTEM"
         },
         To: [{
             Email: toEmail,
@@ -52,20 +54,6 @@ async function sendEmail(
         Subject: subject,
         TextPart: textContent,
         HTMLPart: htmlContent
-    }
-
-    if (attachment) {
-        const filePath = path.join(__dirname, "..", "public", attachment);
-  
-        if (!fs.existsSync(filePath)) {
-          throw new Error(`Attachment file not found: ${filePath}`);
-        }
-        const fileContent = fs.readFileSync(filePath).toString("base64");
-        message.Attachments = [{
-            ContentType: "application/pdf", // MIME type of the file
-            Filename: "Certificate.pdf", // Name to display in the email
-            Base64Content: fileContent
-        }]
     }
 
     request = mailjetClient.post("send", { version: "v3.1" }).request({
@@ -80,4 +68,4 @@ async function sendEmail(
   }
 }
 
-module.exports = { sendEmail };
+export default sendEmail;

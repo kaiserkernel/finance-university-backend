@@ -7,10 +7,9 @@ import {
 } from "@/constant/mailTemplate";
 import { Announcement } from "@/models/announcementModel";
 import { Application } from "@/models/applicationModel";
-import { User } from "@/models/userModel";
-import { sendEmail } from "./autoMailService";
 import { ApplicationStates } from '@/constant/applicationState'
 import { checkStatus, setNestedProperty } from "@/utils/roleHandler";
+import sendEmail from "./mailjetService";
 
 export default {
   approveProcedure: [
@@ -20,16 +19,19 @@ export default {
     "grant_dep",
     "grant_dir",
     "finance",
-  ],
-  roles: [
-    { user: "User" },
-    { reviewer_1: "Reviewer 1" },
-    { reviewer_2: "Reviewer 2" },
-    { col_dean: "College Dean" },
-    { grant_dep: "Research and Extension Officer" },
-    { grant_dir: "Research and Publication Directorate" },
-    { finance: "Finance Director" },
-  ],
+  ] as string[],
+  roles: {
+    col_dean: "College Dean",
+    grant_dep: "Research and Extension Officer",
+    grant_dir: "Research and Pbblication Directorate",
+    finance: "Finance Director"
+  } as Record<string, string>,
+  adminRole: [
+    "col_dean",
+    "grant_dep",
+    "grant_dir",
+    "finance"
+  ] as string[],
   handleRequest: async function (id: string, role: string | null, reqStatus: string) {
     if (role == null) throw new Error("Role validation Error")
     if (role === "user") throw new Error("You don't have permission");
@@ -66,8 +68,18 @@ export default {
       const statusKey = confirmData.key.includes('reviewer') ? `${confirmData.key}.status` : confirmData.key
       // console.log('status key: ', statusKey)
       // application[statusKey] = flag ? ApplicationStates.APPROVED : ApplicationStates.REJECTED;
-      setNestedProperty(application, statusKey, reqStatus)
+      setNestedProperty(application, statusKey, reqStatus);
+      const announcement = await Announcement.findById(application.announcement);
+
       await application.save();
+      if (this.adminRole.includes(role)) {
+        const toEmail = application.email;
+        const toName = application.firstName + " " + application.lastName;
+        const milestone = application.milestone;
+        const announcementTitle = announcement?.title || "";
+        const adminRoleInfo = this.roles[role];
+        sendEmail(toEmail, toName, reqStatus, milestone, announcementTitle, adminRoleInfo);
+      }
       // flag && this.autoEmail(role, confirmData.key, application);
       // !flag && sendEmail(denyMail(application.email));
       return application;
@@ -139,38 +151,38 @@ export default {
     }
     return { result: false };
   },
-  autoEmail: async function (role: string, process: string, application: any) {
-    const nextRole =
-      this.approveProcedure[this.approveProcedure.indexOf(role) + 1];
-    try {
-      if (process === "assigned") {
-        sendEmail(signedMail(application.email));
-      }
-      if (nextRole === "accepted") {
-        sendEmail(acceptedMail(application.email));
-        return;
-      }
-      const user = await User.findOne({
-        college: application.college,
-        role: nextRole,
-      });
-      if (!user?.email) throw new Error("No user for next reviewing.");
-      await sendEmail(
-        mailToNextReviewer(
-          user?.email,
-          application.firstName + " " + application.lastName
-        )
-      );
-      const roleData = this.roles.find(
-        (item) => Object.keys(item)[0] === role
-      ) as any;
+  // autoEmail: async function (role: string, process: string, application: any) {
+  //   const nextRole =
+  //     this.approveProcedure[this.approveProcedure.indexOf(role) + 1];
+  //   try {
+  //     if (process === "assigned") {
+  //       sendEmail(signedMail(application.email));
+  //     }
+  //     if (nextRole === "accepted") {
+  //       sendEmail(acceptedMail(application.email));
+  //       return;
+  //     }
+  //     const user = await User.findOne({
+  //       college: application.college,
+  //       role: nextRole,
+  //     });
+  //     if (!user?.email) throw new Error("No user for next reviewing.");
+  //     await sendEmail(
+  //       mailToNextReviewer(
+  //         user?.email,
+  //         application.firstName + " " + application.lastName
+  //       )
+  //     );
+  //     const roleData = this.roles.find(
+  //       (item) => Object.keys(item)[0] === role
+  //     ) as any;
 
-      roleData &&
-        (await sendEmail(approveMail(application.email, roleData[role])));
+  //     roleData &&
+  //       (await sendEmail(approveMail(application.email, roleData[role])));
 
-      return;
-    } catch (error) {
-      throw error;
-    }
-  },
+  //     return;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // },
 };
