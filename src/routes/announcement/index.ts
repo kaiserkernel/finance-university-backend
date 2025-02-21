@@ -21,31 +21,49 @@ router.post("/all", async (req: any, res: Response) => {
         },
         {
           $addFields: {
+            filteredApplications: {
+              $filter: {
+                input: "$applicationData",
+                as: "appData",
+                cond: { $eq: ["$$appData.email", userEmail] }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
             invoice: {
-                  $gt: [
-                    {
-                      $size: 
-                      {
-                        $filter: {
-                          input: "$applicationData",
-                          as: "appData",
-                          cond: {
-                            $and: [
-                              { $eq: ["$$appData.email", userEmail] },
-                              { $eq: ["$$appData.reviewed", "approved"] }
-                            ]
-                          }
-                        }
-                      }
-                    },
-                    0
-                  ]
+              $gt: [
+                { $size: { 
+                    $filter: {
+                      input: "$filteredApplications",
+                      as: "appData",
+                      cond: { $eq: ["$$appData.reviewed", "approved"] }
+                    }
+                  }
+                },
+                0
+              ]
+            },
+            applyState: {
+              $gt: [
+                { $size: {
+                    $filter: {
+                      input: "$filteredApplications",
+                      as: "appData",
+                      cond: { $ne: ["$$appData.finance", "approved"] }
+                    }
+                  }
+                },
+                0
+              ]
             }
           }
         },
         {
           $project: {
-            applicationData: 0
+            applicationData: 0,
+            filteredApplications: 0 // Optionally remove this if not needed
           }
         }
       ]);
