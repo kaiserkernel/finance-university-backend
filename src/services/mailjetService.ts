@@ -44,8 +44,6 @@ async function sendEmail(
 
     const message: EmailMessage = {
         From: {
-            // Email: "kaiserkernel84@gmail.com",
-            // Name: "Grant SYSTEM"
               Email: "secretary@edu.umch.de",
               Name: "UMCH TICKET SYSTEM"
         },
@@ -58,13 +56,11 @@ async function sendEmail(
         HTMLPart: htmlContent
     }
 
-    request = mailjetClient.post("send", { version: "v3.1" }).request({
+    request = await mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [message]
     });
 
-    console.log(toName, toEmail, 'req - send to name')
     const result = await request;
-    console.log(result, 'res - send email')
     return result.body;
   } catch (error: any) {
     console.error("Error sending email:", error.statusCode, error.response?.text, error);
