@@ -57,6 +57,20 @@ router.post("/all", async (req: any, res: Response) => {
                 },
                 0
               ]
+            },
+            maxMilestone: {
+              $ifNull: [
+                {
+                  $max: {
+                    $map: {
+                      input: "$filteredApplications",
+                      as: "appData",
+                      in: "$$appData.milestone"
+                    }
+                  }
+                },
+                0
+              ]
             }
           }
         },
@@ -67,6 +81,7 @@ router.post("/all", async (req: any, res: Response) => {
           }
         }
       ]);
+      console.log(result, 'res')
       res.status(200).json(result);
       return;
     } else {
