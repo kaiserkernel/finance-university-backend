@@ -81,7 +81,6 @@ router.post("/all", async (req: any, res: Response) => {
           }
         }
       ]);
-      console.log(result, 'res')
       res.status(200).json(result);
       return;
     } else {
