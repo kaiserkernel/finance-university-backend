@@ -11,24 +11,24 @@ const Review = new Schema({
 })
 
 const commentShema = new Schema({
-  reviewer_1: {
+  reviewer_1: [{
     type: Review
-  },
-  reviewer_2: {
+  }],
+  reviewer_2: [{
     type: Review
-  },
-  col_dean: {
+  }],
+  col_dean: [{
     type: Review
-  },
-  grant_dep: {
+  }],
+  grant_dep: [{
     type: Review,
-  },
-  grant_dir: {
+  }],
+  grant_dir: [{
     type: Review,
-  },
-  finance: {
+  }],
+  finance: [{
     type: Review
-  }
+  }]
   // attached: [
   //   {
   //     chaining: {
