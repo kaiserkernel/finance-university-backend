@@ -98,7 +98,7 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
           if (role === 'reviewer')
             role = 'reviewer_1';
 
-          const comment = new Comment({ [role]: { text: content, url: req.file.filename } });
+          const comment = new Comment({ [role]: [{ text: content, url: req.file.filename }] });
           comment
             .save()
             .then((result) => {
@@ -131,19 +131,29 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
               role = 'reviewer_2'
             }
           }
-          Comment.findOneAndUpdate(
-            { _id: application.comment },
-            { $set: { [role]: { text: content, url: req.file.filename } } }
-          )
-            .then((result) => {
-              if (!isEmpty(result)) {
-                io.emit('update_comment', result)
-                res.status(200).send(result);
-              }
-            })
-            .catch((error) => {
-              throw new Error(error.message);
-            });
+
+          //
+          // const a = [];
+          const resultAsRecord = result as Record<string, any>;
+
+          // Ensure `result[role]` is an array before pushing
+          if (!resultAsRecord[role]) {
+            resultAsRecord[role] = []; // Initialize as an empty array if undefined
+          }
+
+          resultAsRecord[role].push({ text: content, url: req.file.filename });
+          
+          resultAsRecord
+          .save()
+          .then((updatedResult:any) => {
+            if (!isEmpty(updatedResult)) {
+              io.emit('update_comment', updatedResult);
+              res.status(200).send(updatedResult);
+            }
+          })
+          .catch((error:any) => {
+            throw new Error(error.message);
+          });
         }
       })
       .catch((error) => {
