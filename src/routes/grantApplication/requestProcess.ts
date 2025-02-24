@@ -160,7 +160,6 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
         }
       })
       .catch((error:any) => {
-        console.log(error.message, '1')
         res.status(500).json({ msg: [error.message] });
       });
   } catch (error: any) {
