@@ -93,12 +93,17 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
 
     Comment.findOne({ _id: application.comment })
       .then((result) => {
+        const fileUrl = req.file? req.file.filename : "";
+        if (!fileUrl && !content) {
+          return;
+        }
+
         if (isEmpty(result)) {
           let role = req.tokenUser.role;
           if (role === 'reviewer')
             role = 'reviewer_1';
 
-          const comment = new Comment({ [role]: [{ text: content, url: req.file.filename }] });
+          const comment = new Comment({ [role]: [{ text: content, url: fileUrl }] });
           comment
             .save()
             .then((result) => {
@@ -132,8 +137,6 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
             }
           }
 
-          //
-          // const a = [];
           const resultAsRecord = result as Record<string, any>;
 
           // Ensure `result[role]` is an array before pushing
@@ -141,7 +144,7 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
             resultAsRecord[role] = []; // Initialize as an empty array if undefined
           }
 
-          resultAsRecord[role].push({ text: content, url: req.file.filename });
+          resultAsRecord[role].push({ text: content, url: fileUrl });
           
           resultAsRecord
           .save()
@@ -156,10 +159,12 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
           });
         }
       })
-      .catch((error) => {
+      .catch((error:any) => {
+        console.log(error.message, '1')
         res.status(500).json({ msg: [error.message] });
       });
   } catch (error: any) {
+    console.log(error.message, '2')
     res.status(500).json({ msg: [error.message] });
   }
 });
