@@ -78,7 +78,13 @@ app.use("/api/announcement", (req, res, next) => {
 	}
 	authVerify(req, res, next);
 }, announcementRouter);
-app.use("/api/user", authVerify, profileRouter);
+// app.use("/api/user", authVerify, profileRouter);
+app.use("/api/user", (req, res, next) => {
+	if (req.method === 'PUT' && req.path.includes('password')) {
+		return next();
+	}
+	authVerify(req, res, next);
+}, profileRouter);
 app.use("/api/grant-application", authVerify, [
 	applicationRouter,
 	requestProcessRouter,
