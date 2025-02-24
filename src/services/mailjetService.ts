@@ -34,7 +34,7 @@ async function sendEmail(
     let request;
 
     const subject = "Grant system announcement";
-    const textContent = "Your application is " + reqStatus;
+    const textContent = `Your application is ${reqStatus || "pending"}`;
     const htmlContent = `
       <p>Dear ${toName}</p>
       <p>Announcement Title: ${announcementTitle}</p>
@@ -55,16 +55,18 @@ async function sendEmail(
         TextPart: textContent,
         HTMLPart: htmlContent
     }
-
-    request = await mailjetClient.post("send", { version: "v3.1" }).request({
+    
+    request = await mailjetClient.post("send", { version: "v3" }).request({
         Messages: [message]
-    });
+    }, { timeout: 15000 });
 
-    const result = await request;
-    return result.body;
-  } catch (error: any) {
-    console.error("Error sending email:", error.statusCode, error.response?.text, error);
-    throw error;
+    return request.body;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+        console.error("Error sending email:", error.message);
+    } else {
+        console.error("Unknown error:", error);
+    }
   }
 }
 
