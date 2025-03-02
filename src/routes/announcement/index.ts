@@ -126,7 +126,8 @@ router.post("/", upload.single('image'), async (req: any, res: Response) => {
   const data = JSON.parse(req.body.data);
   const {title} = data;
   const existingAnnouncement = await Announcement.find({title});
-  if (existingAnnouncement) {
+  
+  if (existingAnnouncement && existingAnnouncement.length > 0) {
     res.status(400).json({msg: ["Already existing announcement with same title"]});
     return;
   }
@@ -137,8 +138,8 @@ router.post("/", upload.single('image'), async (req: any, res: Response) => {
   try {
     const result = await newAnnouncement.save();
     res.status(201).json(result);
-  } catch (error) {
-    res.status(400).json({ msg: [error] });
+  } catch (error:any) {
+    res.status(500).json({ msg: [error.message] });
   }
 })
 
