@@ -11,6 +11,7 @@ const dirPath_1 = path.resolve(__dirname, "../..", "public", "applications");
 const dirPath_2 = path.resolve(__dirname, "../..", "public", "images");
 const dirPath_3 = path.resolve(__dirname, "../..", "public", "reviews");
 const dirPath_4 = path.resolve(__dirname, "../..", "public", "additional_doc");
+const dirPath_5 = path.resolve(__dirname, "../..", "public", "invoice");
 
 const checkAndMakeDir = () => {
 	let state = false;
@@ -38,6 +39,12 @@ const checkAndMakeDir = () => {
 		state = true;
 		fs.mkdirSync(dirPath_4, { recursive: true });
 		console.log("Directory created: ", dirPath_4);
+	}
+	if (!fs.existsSync(dirPath_5)) {
+		// Create the directory
+		state = true;
+		fs.mkdirSync(dirPath_5, { recursive: true });
+		console.log("Directory created: ", dirPath_5);
 	}
 	if (!state) {
 		console.log("Public directories already exist");
