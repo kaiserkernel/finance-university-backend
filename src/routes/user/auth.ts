@@ -83,7 +83,7 @@ router.post("/login", (req: Request, res: Response) => {
         try {
           const token = sign(
             {
-              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 1,
               email: result?.email,
               role: result.role,
               college: result.college
