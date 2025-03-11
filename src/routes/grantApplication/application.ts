@@ -66,7 +66,7 @@ router.post(
 
       // Extract file paths with existence checks
       const applicationPath = req.files["application"] ? req.files["application"][0].filename : null;
-      const applicationOnePath = req.files["applicationOne"] ? req.files["applicationOne"][0].filename : null;
+      const applicationOnePath = req.files["applicationOne"] ? req.files["applicationOne"][0].filename : null; // personal info
 
       // Confirm user by email
       const response = await confirmUserByEmail(req.params.email);
