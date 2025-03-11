@@ -21,9 +21,9 @@ import { reviewerRouter } from "./routes/user/reviewers";
 import { chartRouter } from "./routes/chart";
 
 const app: Application = express();
-const port = process.env.PORT || 8000;
+const port:number = Number(process.env.PORT) || 8000;
 const corsOptions = {
-	origin: ["*"],
+	origin: "http://172.86.66.70:5173", credentials: true
 };
 
 dotenv.config();
@@ -42,7 +42,7 @@ mongoose
 // middleware
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Serve static data
 app.use(
@@ -94,7 +94,7 @@ app.use("/api/chart", authVerify, chartRouter);
 
 // Create socket server
 const io = new Server(
-	app.listen(port, () => {
+	app.listen(port, '0.0.0.0', () => {
 		console.log("=========================================");
 		console.log(`Server is Fire at http://localhost:${port}`);
 		console.log(`Socket Server is available at same port`);
@@ -102,7 +102,7 @@ const io = new Server(
 	}),
 	{
 		cors: {
-			origin: "*",
+			origin: ["http://172.86.66.70:5173", "http://172.86.66.70:8000"],
 			credentials: true
 		},
 		connectionStateRecovery: {
