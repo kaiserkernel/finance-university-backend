@@ -1,7 +1,5 @@
 import express, { Application } from "express";
-import bodyparser from "body-parser";
 import mongoose from "mongoose";
-// import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -23,62 +21,50 @@ import { chartRouter } from "./routes/chart";
 const app: Application = express();
 const port:number = Number(process.env.PORT) || 8000;
 const corsOptions = {
-	origin: "http://172.86.66.70:5173", credentials: true
+	origin: [
+		"http://172.86.66.70:5173",
+		"http://172.86.66.70:8000"
+	], 
+	credentials: true
+	// origin: "*"
 };
 
 dotenv.config();
 
 // mongoose connect
-mongoose
-	.connect(process.env.DB_URI!)
-	.then((result) => {
-		console.log("Connection successful: ", result.connection.name);
-		initializeServer();
-	})
-	.catch((error) => {
-		console.log("Connect error: ", error);
-	});
+const connectDB = async () => {
+	try {
+	  const result = await mongoose.connect(process.env.DB_URI!);
+	  console.log("Connected to DB:", result.connection.name);
+	  initializeServer();
+	} catch (error) {
+	  console.error("DB Connection Error:", error);
+	}
+};
+connectDB();
 
 // middleware
-app.use(bodyparser.json());
-app.use(bodyparser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
 
 // Serve static data
-app.use(
-	"/images",
-	express.static(path.resolve(__dirname, "..", "public", "images"))
-);
-app.use(
-	"/reviews",
-	express.static(path.resolve(__dirname, "..", "public", "reviews"))
-);
-app.use(
-	"/application",
-	express.static(path.resolve(__dirname, "..", "public", "applications"))
-);
-app.use(
-	"/additional_doc",
-	express.static(path.resolve(__dirname, "..", "public", "additional_doc"))
-);
-app.use(
-	"/invoice",
-	express.static(path.resolve(__dirname, "..", "public", "invoice"))
+// Serve static files dynamically
+const staticPaths = ["images", "reviews", "application", "additional_doc", "invoice"];
+staticPaths.forEach((dir) =>
+  app.use(`/${dir}`, express.static(path.resolve(__dirname, "..", "public", dir)))
 );
 
 // router
 app.use("/api/auth", authRouter);
 app.use("/api/seed", seedRouter);
-
 app.use("/api/pending-user", authVerify, pendingUserRouter);
-// app.use("/api/announcement", authVerify, announcementRouter);
 app.use("/api/announcement", (req, res, next) => {
 	if (req.method === 'POST' && req.path === "/all") {
 		return next();
 	}
 	authVerify(req, res, next);
 }, announcementRouter);
-// app.use("/api/user", authVerify, profileRouter);
 app.use("/api/user", (req, res, next) => {
 	if (req.method === 'PUT' && req.path.includes('password')) {
 		return next();
@@ -92,25 +78,25 @@ app.use("/api/grant-application", authVerify, [
 app.use("/api/reviewer", authVerify, reviewerRouter);
 app.use("/api/chart", authVerify, chartRouter);
 
-// Create socket server
-const io = new Server(
-	app.listen(port, '0.0.0.0', () => {
+// Start Express Server
+const server = app.listen(port,
+	"0.0.0.0", 
+	() => {
 		console.log("=========================================");
-		console.log(`Server is Fire at http://localhost:${port}`);
-		console.log(`Socket Server is available at same port`);
+		console.log(`Server running at http://localhost:${port}`);
+		console.log(`Socket.IO available on the same port`);
 		console.log("=========================================");
-	}),
-	{
-		cors: {
-			origin: ["http://172.86.66.70:5173", "http://172.86.66.70:8000"],
-			credentials: true
-		},
-		connectionStateRecovery: {
-			maxDisconnectionDuration: 2 * 60 * 1000,
-			skipMiddlewares: true,
-		},
 	}
 );
+  
+// Create Socket.IO Server
+const io = new Server(server, {
+	cors: corsOptions,
+	connectionStateRecovery: {
+		maxDisconnectionDuration: 2 * 60 * 1000,
+		skipMiddlewares: true,
+	},
+});
 
 io.engine.generateId = (req) => {
 	return uuidv4(); // must be unique across all Socket.IO servers
