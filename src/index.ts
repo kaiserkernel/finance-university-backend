@@ -50,7 +50,7 @@ app.use(cors(corsOptions));
 
 // Serve static data
 // Serve static files dynamically
-const staticPaths = ["images", "reviews", "application", "additional_doc", "invoice"];
+const staticPaths = ["images", "reviews", "applications", "additional_doc", "invoice"];
 staticPaths.forEach((dir) =>
   app.use(`/${dir}`, express.static(path.resolve(__dirname, "..", "public", dir)))
 );
