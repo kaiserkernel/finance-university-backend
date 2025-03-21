@@ -78,13 +78,13 @@ router.post(
 
       const user = response.user;
       const prevMilestone = milestone - 1;
-
+      
       // Check for existing application
       const existingApplication = await Application.findOne({
         email: user?.email,
         announcement,
         milestone: prevMilestone,
-        finance: "approved"
+        finance: "reviewed"
       });
 
       if (!existingApplication && milestone !== 1) {
