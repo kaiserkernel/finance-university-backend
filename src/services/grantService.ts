@@ -115,14 +115,14 @@ export default {
     }
     
     // finance checking procedure
-    if (role === this.approveProcedure[5] ) {
-      if (checkStatus(data[previousRole], ApplicationStates.REVIEWED)) {
-        // previous role's status is reivewed - true
-        return { result: true, key: role }
-      }
-      // not upper case - false
-      return { result: false }
-    }
+    // if (role === this.approveProcedure[5] ) {
+    //   if (checkStatus(data[previousRole], ApplicationStates.REVIEWED)) {
+    //     // previous role's status is reivewed - true
+    //     return { result: true, key: role }
+    //   }
+    //   // not upper case - false
+    //   return { result: false }
+    // }
     
     // Check for pending, rejected, or approved statuses of the previous role
     if ( checkStatus(data[previousRole], ApplicationStates.PENDING) || checkStatus(data[previousRole], ApplicationStates.REJECTED)) {

@@ -91,7 +91,8 @@ const ApplicationSchema = new Schema({
   },
   finance: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    // enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "reviewed"],
     default: "pending",
   },
   comment: {
@@ -131,7 +132,7 @@ const ApplicationSchema = new Schema({
 
 // Middleware to update the reviewed field
 ApplicationSchema.pre('save', function (next) {
-  if (this.grant_dir === 'approved' && this.reviewed === 'pending') {
+  if (this.finance === 'approved' && this.reviewed === 'pending') {
     this.reviewed = 'approved';
   }
   next();
