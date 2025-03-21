@@ -35,9 +35,9 @@ const storageOfReview = multer.diskStorage({
     const { invoice } = req.body;
 
     let fileName = file.originalname.split('.')[0] + '-' + Date.now() + '.' + file.originalname.split('.').pop();
-    if (invoice) {
-      fileName = 'invoice-' + fileName;
-    }
+    // if (invoice) {
+    //   fileName = 'invoice-' + fileName;
+    // }
     cb(null, fileName);
   }
 })

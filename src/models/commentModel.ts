@@ -7,6 +7,11 @@ const Review = new Schema({
   },
   text: {
     type: String
+  },
+  commentType: {
+    type: String,
+    enum: ["comment", "settlement"],
+    default: "comment"
   }
 })
 

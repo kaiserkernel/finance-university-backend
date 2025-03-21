@@ -94,6 +94,15 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
     Comment.findOne({ _id: application.comment })
       .then((result) => {
         const fileUrl = req.file? req.file.filename : "";
+        const { invoice } = req.body;
+        
+        let commentBody;
+        if (invoice) {
+          commentBody = { text: content, url: fileUrl, commentType: "settlement" }
+        } else {
+          commentBody = { text: content, url: fileUrl }
+        }
+
         if (!fileUrl && !content) {
           return;
         }
@@ -103,7 +112,7 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
           if (role === 'reviewer')
             role = 'reviewer_1';
 
-          const comment = new Comment({ [role]: [{ text: content, url: fileUrl }] });
+          const comment = new Comment({ [role]: [ commentBody ] });
           comment
             .save()
             .then((result) => {
@@ -143,8 +152,8 @@ router.post("/comment/:id", uploadReview.single('reivew'), async (req: any, res:
           if (!resultAsRecord[role]) {
             resultAsRecord[role] = []; // Initialize as an empty array if undefined
           }
-
-          resultAsRecord[role].push({ text: content, url: fileUrl });
+          
+          resultAsRecord[role].push(commentBody);
           
           resultAsRecord
           .save()
